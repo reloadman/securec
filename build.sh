@@ -45,9 +45,8 @@ discover_toolchains() {
     local list=""
     for dir in "$TOOLCHAIN_ROOT"/*; do
         [ -d "$dir" ] || continue
-        [ -d "$dir/bin" ] || continue
         local gcc_bin
-        gcc_bin=$(find "$dir/bin" -maxdepth 1 -type f -name "*-gcc" | head -n1 || true)
+    gcc_bin=$(find "$dir" -maxdepth 3 \( -path "*/bin/*-gcc" -o -path "*/host/bin/*-gcc" \) \( -type f -o -type l \) 2>/dev/null | head -n1 || true)
         [ -n "$gcc_bin" ] || continue
         local prefix
         prefix=$(basename "$gcc_bin")
@@ -62,6 +61,7 @@ discover_toolchains() {
 TOOLCHAIN_PAIRS="${TOOLCHAIN_PAIRS:-$(discover_toolchains | sort)}"
 if [ -z "$TOOLCHAIN_PAIRS" ]; then
     echo "No toolchains found under $TOOLCHAIN_ROOT" >&2
+    echo "Searched for *-gcc under */bin and */host/bin. Set TOOLCHAIN_PAIRS or TOOLCHAIN_ROOT explicitly." >&2
     exit 1
 fi
 
